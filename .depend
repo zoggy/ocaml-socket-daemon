@@ -1,3 +1,6 @@
+sdaemon_client.cmo : sdaemon_common.cmi sdaemon_client.cmi
+sdaemon_client.cmx : sdaemon_common.cmx sdaemon_client.cmi
+sdaemon_client.cmi :
 sdaemon_common.cmo : sdaemon_common.cmi
 sdaemon_common.cmx : sdaemon_common.cmi
 sdaemon_common.cmi :

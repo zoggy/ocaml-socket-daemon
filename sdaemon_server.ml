@@ -56,7 +56,7 @@ let establish_server ?(backlog=5) sock_file f =
     Unix.SOCK_STREAM 0
   in
   Lwt_unix.setsockopt sock Unix.SO_REUSEADDR true;
-  Lwt_unix.bind sock sockaddr;
+  Lwt_unix.bind sock sockaddr ;
   Lwt_unix.listen sock backlog;
   let abort_waiter, abort_wakener = Lwt.wait () in
   let abort_waiter = abort_waiter >>= fun _ -> Lwt.return `Shutdown in
@@ -124,10 +124,13 @@ let daemonize handlers socket_spec f =
         Sys.set_signal Sys.sigpipe Sys.Signal_ignore ;
         match Unix.fork () with
           0 ->
-            let null = Unix.openfile "/dev/null" [Unix.O_RDWR] 0o600 in
+            let null = Unix.openfile "/tmp/sdaemon" (*"/dev/null"*)
+              [Unix.O_CREAT ; Unix.O_RDWR] 0o600
+            in
             List.iter (Unix.dup2 null) [ Unix.stdin; Unix.stdout ; Unix.stderr];
             let server = socket_server socket_spec handlers in
-            f server
+            Pervasives.at_exit (fun () -> shutdown_server server) ;
+            f server >>= fun x -> shutdown_server server; Lwt.return x
         | _ -> exit 0
       end
   | _ -> exit 0

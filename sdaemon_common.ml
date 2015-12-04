@@ -1,28 +1,3 @@
-(*********************************************************************************)
-(*                Socket-daemon                                                  *)
-(*                                                                               *)
-(*    Copyright (C) 2015 Institut National de Recherche en Informatique          *)
-(*    et en Automatique. All rights reserved.                                    *)
-(*                                                                               *)
-(*    This program is free software; you can redistribute it and/or modify       *)
-(*    it under the terms of the GNU Lesser General Public License version        *)
-(*    3 as published by the Free Software Foundation.                            *)
-(*                                                                               *)
-(*    This program is distributed in the hope that it will be useful,            *)
-(*    but WITHOUT ANY WARRANTY; without even the implied warranty of             *)
-(*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *)
-(*    GNU Library General Public License for more details.                       *)
-(*                                                                               *)
-(*    You should have received a copy of the GNU Lesser General Public           *)
-(*    License along with this program; if not, write to the Free Software        *)
-(*    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA                   *)
-(*    02111-1307  USA                                                            *)
-(*                                                                               *)
-(*    Contact: Maxence.Guesdon@inria.fr                                          *)
-(*                                                                               *)
-(*                                                                               *)
-(*********************************************************************************)
-
 open Lwt.Infix
 
 let send oc v =
@@ -64,15 +39,15 @@ let string_of_socket_spec = function
 let replace_in_socket_filename str =
   let user = string_of_int (Unix.getuid()) in
   let re_user = Str.regexp_string "%{uid}" in
-  Str.global_replace re_user str user
+  Str.global_replace re_user user str
 
 let socket_filename spec =
   let file =
     match spec with
       Tmp str ->
-        Printf.sprintf "/tmp/%s" (Filename.quote str)
+        Printf.sprintf "/tmp/%s" str
     | Relative str ->
-        Filename.concat (Sys.getcwd()) (Filename.quote str)
+        Filename.concat (Sys.getcwd()) str
     | Absolute str ->
         str
   in

@@ -23,3 +23,24 @@
 (*                                                                               *)
 (*********************************************************************************)
 
+type command = {
+  name : string;
+  desc : string;
+  options : (Arg.key * Arg.spec * Arg.doc) list;
+  anon : (string -> unit) option;
+  action : (Sdaemon_common.socket_spec -> unit Lwt.t) option;
+}
+val command :
+  ?options:(Arg.key * Arg.spec * Arg.doc) list ->
+  ?anon:(string -> unit) ->
+  ?action:(Sdaemon_common.socket_spec -> unit Lwt.t) ->
+  name:string -> desc:string -> unit -> command
+
+val connect :
+  Sdaemon_common.socket_spec ->
+  (Lwt_io.input_channel * Lwt_io.output_channel) Lwt.t
+
+val run :
+  ?options:(Arg.key * Arg.spec * Arg.doc) list ->
+  ?commands:command list ->
+  (unit -> Sdaemon_common.socket_spec) -> name:'a -> version:string -> unit

@@ -137,7 +137,7 @@ let run ?(options=[]) ?(commands=[]) sock_spec ~name ~version =
     Arg.parse_dynamic options anon (usage commands);
     match !action with
       None -> ()
-    | Some f -> Lwt_main.run (f sock_spec)
+    | Some f -> Lwt_main.run (f (sock_spec()))
   with
     e ->
       let msg = match e with

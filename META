@@ -10,7 +10,6 @@ archive(native,plugin) = "socket_daemon_server.cmxs"
 )
 
 package "client" (
-requires = "cmdliner"
 archive(toploop) = "socket_daemon_client.cma"
 archive(byte) = "socket_daemon_client.cma"
 archive(native) = "socket_daemon_client.cmxa"

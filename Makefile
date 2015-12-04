@@ -27,7 +27,7 @@
 VERSION=0.1.0
 
 OCAMLFIND=ocamlfind
-PACKAGES=lwt.unix,lwt.ppx,cmdliner
+PACKAGES=lwt.unix,lwt.ppx
 COMPFLAGS=-annot -safe-string -g
 OCAMLPP=
 OCAMLLIB:=`$(OCAMLC) -where`
