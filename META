@@ -1,0 +1,18 @@
+version = "0.1.0"
+description = "Creating socket driven daemons"
+requires = "lwt.unix"
+
+package "server" (
+archive(toploop) = "socket_daemon_server.cma"
+archive(byte) = "socket_daemon_server.cma"
+archive(native) = "socket_daemon_server.cmxa"
+archive(native,plugin) = "socket_daemon_server.cmxs"
+)
+
+package "client" (
+archive(toploop) = "socket_daemon_client.cma"
+archive(byte) = "socket_daemon_client.cma"
+archive(native) = "socket_daemon_client.cmxa"
+archive(native,plugin) = "socket_daemon_client.cmxs"
+)
+
