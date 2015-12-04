@@ -5,21 +5,36 @@ let send oc v =
     Lwt_chan.flush oc
 let receive ic = Lwt_chan.input_value ic
 
-type client_msg = ..
+type client_msg = .. [@@deriving yojson]
 type client_msg +=
   | Stop
   | Restart
   | Status
-  | Set_log_level of int
+  | Set_log_level of int [@@deriving yojson]
 
-type server_msg = ..
+type server_msg = ..  [@@deriving yojson]
 type server_msg +=
-  String of string
+  String of string  [@@deriving yojson]
 
-let send_client_msg = send
-let send_server_msg = send
-let receive_client_msg oc = (receive oc : client_msg Lwt.t)
-let receive_server_msg oc = (receive oc : server_msg Lwt.t)
+let send_client_msg oc msg = send oc (client_msg_to_yojson msg)
+
+let send_server_msg oc msg = send oc (server_msg_to_yojson msg)
+
+let receive_client_msg ic =
+  (receive ic) >>= fun json ->
+    match client_msg_of_yojson json with
+    | `Ok v -> Lwt.return v
+    | `Error msg -> Lwt.fail_with msg
+
+let receive_server_msg ic =
+  (receive ic) >>= fun json ->
+      match server_msg_of_yojson json with
+    | `Ok v -> Lwt.return v
+    | `Error msg -> Lwt.fail_with msg
+
+let receive_server_msg_opt ic =
+  try%lwt receive_server_msg ic >>= fun msg -> Lwt.return (Some msg)
+  with _ -> Lwt.return_none
 
 type socket_spec =
 | Tmp of string

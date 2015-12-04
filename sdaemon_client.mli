@@ -43,4 +43,4 @@ val connect :
 val run :
   ?options:(Arg.key * Arg.spec * Arg.doc) list ->
   ?commands:command list ->
-  (unit -> Sdaemon_common.socket_spec) -> name:'a -> version:string -> unit
+  (unit -> Sdaemon_common.socket_spec) -> name:string -> version:string -> unit

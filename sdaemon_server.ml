@@ -36,12 +36,12 @@ type handlers = {
 
 let default_handlers = {
   on_stop = (fun _ -> exit 0) ;
-  on_restart = (fun _ -> Lwt.return_unit) ;
+  on_restart = Lwt_chan.close_out ;
   on_set_log_level = (fun _ _ -> Lwt.return_unit) ;
   on_status = (fun _ -> Lwt.return "Running") ;
   on_other = (fun _ oc msg ->
        let msg = Printf.sprintf "Unhandled message %s" (Printexc.to_string (Obj.magic msg)) in
-       Sdaemon_common.send_server_msg oc (String msg)
+       Sdaemon_common.send_server_msg oc (Sdaemon_common.String msg)
     ) ;
   }
 
@@ -60,6 +60,7 @@ let establish_server ?(backlog=5) sock_file f =
   Lwt_unix.listen sock backlog;
   let abort_waiter, abort_wakener = Lwt.wait () in
   let abort_waiter = abort_waiter >>= fun _ -> Lwt.return `Shutdown in
+  let accept () = Lwt_unix.accept sock >|= (fun x -> `Accept x) in
   let rec on_value acc = function
   | [] -> Lwt.return acc
   | `Done :: q -> on_value acc q
@@ -70,6 +71,7 @@ let establish_server ?(backlog=5) sock_file f =
           Lwt.return []
       end
   | (`Accept (fd, addr) :: q) ->
+      prerr_endline "connection accepted";
       (try Lwt_unix.set_close_on_exec fd with Invalid_argument _ -> ());
       let close = lazy
         begin
@@ -82,8 +84,7 @@ let establish_server ?(backlog=5) sock_file f =
         and oc = Lwt_io.of_fd ~mode:Lwt_io.output ~close:(fun () -> Lazy.force close) fd in
         f ic oc >>= fun () -> Lwt.return `Done
       in
-      let accept = Lwt_unix.accept sock >|= (fun x -> `Accept x) in
-      on_value (t :: accept :: acc) q
+      on_value (t :: accept () :: acc) q
   in
   let rec loop threads =
     let%lwt (values, threads) = Lwt.nchoose_split threads in
@@ -91,29 +92,25 @@ let establish_server ?(backlog=5) sock_file f =
       [] -> Lwt.return_unit
     | threads -> loop threads
   in
-  ignore (loop [abort_waiter]);
+  ignore (loop [accept (); abort_waiter]);
   { shutdown = lazy(Lwt.wakeup abort_wakener `Shutdown) }
 
 let handle_connection handlers ic oc =
   try%lwt
-    match%lwt Lwt_chan.input_value ic with
-    | Stop -> handlers.on_stop oc
-    | Restart -> handlers.on_restart oc
-    | Set_log_level n -> handlers.on_set_log_level oc n
-    | Status ->
+    match%lwt Sdaemon_common.receive_client_msg ic with
+    | Sdaemon_common.Stop -> handlers.on_stop oc
+    | Sdaemon_common.Restart -> handlers.on_restart oc
+    | Sdaemon_common.Set_log_level n -> handlers.on_set_log_level oc n
+    | Sdaemon_common.Status ->
         begin
           handlers.on_status () >>= fun str ->
-            Lwt_chan.output_value oc (String str) >>= fun () ->
-            Lwt_io.flush oc
+            Sdaemon_common.send_server_msg oc (Sdaemon_common.String str)
         end
     | other -> handlers.on_other ic oc other
   with
     e ->
-      Lwt.join [Lwt_chan.close_in ic ; Lwt_chan.close_out oc]
-
-let socket_server socket_spec handlers =
-  let sock_file = Sdaemon_common.socket_filename socket_spec in
-  establish_server sock_file (handle_connection handlers)
+      try%lwt Lwt.join [Lwt_chan.close_in ic ; Lwt_chan.close_out oc]
+      with _ -> prerr_endline (Printexc.to_string e); Lwt.return_unit
 
 let daemonize handlers socket_spec f =
   match Unix.fork () with
@@ -124,13 +121,20 @@ let daemonize handlers socket_spec f =
         Sys.set_signal Sys.sigpipe Sys.Signal_ignore ;
         match Unix.fork () with
           0 ->
-            let null = Unix.openfile "/tmp/sdaemon" (*"/dev/null"*)
-              [Unix.O_CREAT ; Unix.O_RDWR] 0o600
-            in
-            List.iter (Unix.dup2 null) [ Unix.stdin; Unix.stdout ; Unix.stderr];
-            let server = socket_server socket_spec handlers in
-            Pervasives.at_exit (fun () -> shutdown_server server) ;
-            f server >>= fun x -> shutdown_server server; Lwt.return x
+            begin
+              let sock_file = Sdaemon_common.socket_filename socket_spec in
+              Pervasives.at_exit
+                (fun () ->
+                   try prerr_endline "removing sock file"; Unix.unlink sock_file
+                   with _ -> ()
+                );
+              let null = Unix.openfile "/tmp/sdaemon" (*"/dev/null"*)
+                [Unix.O_CREAT ; Unix.O_RDWR ; Unix.O_TRUNC] 0o600
+              in
+              List.iter (Unix.dup2 null) [ Unix.stdin; Unix.stdout ; Unix.stderr];
+              let server = establish_server sock_file  (handle_connection handlers) in
+              f server >>= fun x -> shutdown_server server; Lwt.return x
+            end
         | _ -> exit 0
       end
   | _ -> exit 0
