@@ -7,6 +7,8 @@ type handlers = {
     Lwt_io.input_channel ->
     Lwt_io.output_channel -> Sdaemon_common.client_msg -> unit Lwt.t;
 }
+val default_handlers : handlers
+
 type server
 val shutdown_server : server -> unit
 val daemonize :

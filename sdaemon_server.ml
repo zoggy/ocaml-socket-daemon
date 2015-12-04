@@ -9,6 +9,17 @@ type handlers = {
     on_other : Lwt_io.input_channel -> Lwt_io.output_channel -> client_msg -> unit Lwt.t ;
   }
 
+let default_handlers = {
+  on_stop = (fun _ -> exit 0) ;
+  on_restart = (fun _ -> Lwt.return_unit) ;
+  on_set_log_level = (fun _ _ -> Lwt.return_unit) ;
+  on_status = (fun _ -> Lwt.return "Running") ;
+  on_other = (fun _ oc msg ->
+       let msg = Printf.sprintf "Unhandled message %s" (Printexc.to_string (Obj.magic msg)) in
+       Sdaemon_common.send_server_msg oc (String msg)
+    ) ;
+  }
+
 (* modified from Lwt_io *)
 type server = { shutdown : unit Lazy.t }
 

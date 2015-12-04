@@ -1,0 +1,6 @@
+*.a
+*.o
+*.cm*
+*.annot
+.chamo*
+

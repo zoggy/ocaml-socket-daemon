@@ -1,4 +1,9 @@
+open Lwt.Infix
 
+let send oc v =
+  Lwt_chan.output_value oc v >>= fun () ->
+    Lwt_chan.flush oc
+let receive ic = Lwt_chan.input_value ic
 
 type client_msg = ..
 type client_msg +=
@@ -10,6 +15,11 @@ type client_msg +=
 type server_msg = ..
 type server_msg +=
   String of string
+
+let send_client_msg = send
+let send_server_msg = send
+let receive_client_msg oc = (receive oc : client_msg Lwt.t)
+let receive_server_msg oc = (receive oc : server_msg Lwt.t)
 
 type socket_spec =
 | Tmp of string

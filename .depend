@@ -1,0 +1,6 @@
+sdaemon_common.cmo : sdaemon_common.cmi
+sdaemon_common.cmx : sdaemon_common.cmi
+sdaemon_common.cmi :
+sdaemon_server.cmo : sdaemon_common.cmi sdaemon_server.cmi
+sdaemon_server.cmx : sdaemon_common.cmx sdaemon_server.cmi
+sdaemon_server.cmi : sdaemon_common.cmi
