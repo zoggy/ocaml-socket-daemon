@@ -71,7 +71,6 @@ let establish_server ?(backlog=5) sock_file f =
           Lwt.return []
       end
   | (`Accept (fd, addr) :: q) ->
-      prerr_endline "connection accepted";
       (try Lwt_unix.set_close_on_exec fd with Invalid_argument _ -> ());
       let close = lazy
         begin
@@ -110,7 +109,7 @@ let handle_connection handlers ic oc =
   with
     e ->
       try%lwt Lwt.join [Lwt_chan.close_in ic ; Lwt_chan.close_out oc]
-      with _ -> prerr_endline (Printexc.to_string e); Lwt.return_unit
+      with _ -> Lwt_io.write_line Lwt_io.stderr (Printexc.to_string e)
 
 let daemonize handlers socket_spec f =
   match Unix.fork () with
@@ -124,10 +123,7 @@ let daemonize handlers socket_spec f =
             begin
               let sock_file = Sdaemon_common.socket_filename socket_spec in
               Pervasives.at_exit
-                (fun () ->
-                   try prerr_endline "removing sock file"; Unix.unlink sock_file
-                   with _ -> ()
-                );
+                (fun () -> Unix.unlink sock_file with _ -> ());
               let null = Unix.openfile (*"/tmp/sdaemon"*) "/dev/null"
                 [Unix.O_CREAT ; Unix.O_RDWR ; Unix.O_TRUNC] 0o600
               in
