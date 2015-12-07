@@ -118,9 +118,9 @@ $(LIB_CLIENT_BYTE): $(LIB_CLIENT_CMIFILES) $(LIB_CLIENT_CMOFILES)
 
 ##########
 .PHONY: doc
-dump.odoc:
-	$(OCAMLFIND) ocamldoc -package $(JS_PACKAGES) -dump $@ -rectypes \
-	sdaemon_*.mli
+dump.odoc: sdaemon*.mli
+	$(OCAMLFIND) ocamldoc -package $(PACKAGES) -dump $@ -rectypes \
+	sdaemon*.mli
 
 doc: dump.odoc
 	$(MKDIR) doc
@@ -136,9 +136,9 @@ docstog: dump.odoc
 install: all
 	$(OCAMLFIND) install socket-daemon META LICENSE \
 		$(LIB_COMMON) $(LIB_COMMON_CMXS) $(LIB_COMMON_OFILES) $(LIB_COMMON_CMXFILES) $(LIB_COMMON_A) \
-		$(LIB_COMMON_BYTE) $(LIB_COMMON_CMIFILES) \
+		$(LIB_COMMON_BYTE) $(LIB_COMMON_CMIFILES) $(LIB_COMMON_CMIFILES:.cmi=.mli) \
 		$(LIB_SERVER) $(LIB_SERVER_CMXS) $(LIB_SERVER_OFILES) $(LIB_SERVER_CMXFILES) $(LIB_SERVER_A) \
-		$(LIB_SERVER_BYTE) $(LIB_SERVER_CMIFILES) \
+		$(LIB_SERVER_BYTE) $(LIB_SERVER_CMIFILES) $(LIB_SERVER_CMIFILES:.cmi=.mli) \
 		$(LIB_CLIENT) $(LIB_CLIENT_CMXS) $(LIB_CLIENT_OFILES) $(LIB_CLIENT_CMXFILES) $(LIB_CLIENT_A) \
 		$(LIB_CLIENT_BYTE) $(LIB_CLIENT_CMIFILES) $(LIB_CLIENT_CMIFILES:.cmi=.mli)
 

@@ -128,7 +128,7 @@ let daemonize handlers socket_spec f =
                    try prerr_endline "removing sock file"; Unix.unlink sock_file
                    with _ -> ()
                 );
-              let null = Unix.openfile "/tmp/sdaemon" (*"/dev/null"*)
+              let null = Unix.openfile (*"/tmp/sdaemon"*) "/dev/null"
                 [Unix.O_CREAT ; Unix.O_RDWR ; Unix.O_TRUNC] 0o600
               in
               List.iter (Unix.dup2 null) [ Unix.stdin; Unix.stdout ; Unix.stderr];
