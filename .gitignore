@@ -1,3 +1,5 @@
+dump.odoc
+doc/
 *.a
 *.o
 *.cm*
