@@ -148,7 +148,7 @@ uninstall:
 # archive :
 ###########
 archive:
-	git archive --prefix=socket-daemon-$(VERSION)/ HEAD | gzip > ../socket-daemon-gh-pages/socket-daemon-$(VERSION).tar.gz
+	git archive --prefix=socket-daemon-$(VERSION)/ HEAD | gzip > /tmp/socket-daemon-$(VERSION).tar.gz
 
 #####
 clean:
