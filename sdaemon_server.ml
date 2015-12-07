@@ -123,7 +123,7 @@ let daemonize handlers socket_spec f =
             begin
               let sock_file = Sdaemon_common.socket_filename socket_spec in
               Pervasives.at_exit
-                (fun () -> Unix.unlink sock_file with _ -> ());
+                (fun () -> try Unix.unlink sock_file with _ -> ());
               let null = Unix.openfile (*"/tmp/sdaemon"*) "/dev/null"
                 [Unix.O_CREAT ; Unix.O_RDWR ; Unix.O_TRUNC] 0o600
               in

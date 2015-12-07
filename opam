@@ -12,7 +12,6 @@ bug-reports: "https://github.com/zoggy/ocaml-socket-daemon/issues"
 tags: ["socket" "daemon" "unix"]
 
 build: [
-  ["./configure" "--prefix" prefix]
   [make "all"]
 ]
 
