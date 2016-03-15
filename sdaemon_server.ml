@@ -35,7 +35,7 @@ type handlers = {
   }
 
 let default_handlers = {
-  on_stop = (fun _ -> exit 0) ;
+  on_stop = (fun _ -> Lwt.return_unit) ;
   on_restart = Lwt_chan.close_out ;
   on_set_log_level = (fun _ _ -> Lwt.return_unit) ;
   on_status = (fun _ -> Lwt.return "Running") ;
@@ -107,18 +107,18 @@ let handle_connection handlers ic oc =
         end
     | other -> handlers.on_other ic oc other
   with
-    e ->
+  | e ->
       try%lwt Lwt.join [Lwt_chan.close_in ic ; Lwt_chan.close_out oc]
       with _ -> Lwt_io.write_line Lwt_io.stderr (Printexc.to_string e)
 
 let daemonize handlers socket_spec f =
-  match Unix.fork () with
+  match Lwt_unix.fork () with
     0 ->
       begin
         let _pid = Unix.setsid () in
         Sys.set_signal Sys.sighup Sys.Signal_ignore ;
         Sys.set_signal Sys.sigpipe Sys.Signal_ignore ;
-        match Unix.fork () with
+        match Lwt_unix.fork () with
           0 ->
             begin
               let sock_file = Sdaemon_common.socket_filename socket_spec in
@@ -128,7 +128,7 @@ let daemonize handlers socket_spec f =
                 [Unix.O_CREAT ; Unix.O_RDWR ; Unix.O_TRUNC] 0o600
               in
               List.iter (Unix.dup2 null) [ Unix.stdin; Unix.stdout ; Unix.stderr];
-              let server = establish_server sock_file  (handle_connection handlers) in
+              let server = establish_server sock_file (handle_connection handlers) in
               f server >>= fun x -> shutdown_server server; Lwt.return x
             end
         | _ -> exit 0
