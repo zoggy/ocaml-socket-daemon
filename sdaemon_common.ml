@@ -23,14 +23,14 @@ let send_server_msg oc msg = send oc (server_msg_to_yojson msg)
 let receive_client_msg ic =
   (receive ic) >>= fun json ->
     match client_msg_of_yojson json with
-    | `Ok v -> Lwt.return v
-    | `Error msg -> Lwt.fail_with msg
+    | Ok v -> Lwt.return v
+    | Error msg -> Lwt.fail_with msg
 
 let receive_server_msg ic =
   (receive ic) >>= fun json ->
       match server_msg_of_yojson json with
-    | `Ok v -> Lwt.return v
-    | `Error msg -> Lwt.fail_with msg
+    | Ok v -> Lwt.return v
+    | Error msg -> Lwt.fail_with msg
 
 let receive_server_msg_opt ic =
   try%lwt receive_server_msg ic >>= fun msg -> Lwt.return (Some msg)

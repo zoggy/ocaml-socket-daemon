@@ -24,7 +24,7 @@
 #################################################################################
 
 # DO NOT FORGET TO UPDATE META FILE
-VERSION=0.2.0
+VERSION=0.3.0
 
 OCAMLFIND=ocamlfind
 

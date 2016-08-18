@@ -1,4 +1,4 @@
-version = "0.2.0"
+version = "0.3.0"
 description = "Creating socket driven daemons"
 requires = "lwt.unix,ppx_deriving_yojson"
 archive(toploop) = "socket_daemon_common.cma"
